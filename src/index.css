@@ -1,0 +1,161 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    --background: 220 17% 97%;
+    --foreground: 220 13% 13%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 220 13% 13%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 13% 13%;
+
+    --primary: 173 80% 40%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 220 14% 96%;
+    --secondary-foreground: 220 13% 13%;
+
+    --muted: 220 14% 96%;
+    --muted-foreground: 220 9% 46%;
+
+    --accent: 210 100% 50%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 173 80% 40%;
+
+    --radius: 1rem;
+
+    /* Chat-specific colors */
+    --chat-bg: 220 17% 97%;
+    --chat-header: 173 80% 40%;
+    --message-sent: 173 80% 40%;
+    --message-received: 0 0% 100%;
+    --message-hover: 220 14% 96%;
+    
+    /* Animations */
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-bounce: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+
+    --sidebar-background: 0 0% 98%;
+
+    --sidebar-foreground: 240 5.3% 26.1%;
+
+    --sidebar-primary: 240 5.9% 10%;
+
+    --sidebar-primary-foreground: 0 0% 98%;
+
+    --sidebar-accent: 240 4.8% 95.9%;
+
+    --sidebar-accent-foreground: 240 5.9% 10%;
+
+    --sidebar-border: 220 13% 91%;
+
+    --sidebar-ring: 217.2 91.2% 59.8%;
+    
+    /* Admin theme - Red based */
+    --admin-background: 0 0% 7%;
+    --admin-foreground: 0 0% 98%;
+    --admin-card: 0 20% 12%;
+    --admin-card-foreground: 0 0% 98%;
+    --admin-primary: 0 84% 60%;
+    --admin-primary-foreground: 0 0% 100%;
+    --admin-accent: 0 72% 50%;
+    --admin-accent-foreground: 0 0% 100%;
+    --admin-muted: 0 20% 18%;
+    --admin-muted-foreground: 0 5% 65%;
+    --admin-border: 0 20% 20%;
+    --admin-input: 0 20% 18%;
+  }
+
+  .dark {
+    --background: 220 13% 13%;
+    --foreground: 220 17% 97%;
+
+    --card: 220 13% 18%;
+    --card-foreground: 220 17% 97%;
+
+    --popover: 220 13% 18%;
+    --popover-foreground: 220 17% 97%;
+
+    --primary: 173 80% 40%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 220 13% 18%;
+    --secondary-foreground: 220 17% 97%;
+
+    --muted: 220 13% 18%;
+    --muted-foreground: 220 9% 65%;
+
+    --accent: 210 100% 50%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 220 13% 25%;
+    --input: 220 13% 25%;
+    --ring: 173 80% 40%;
+    
+    --chat-bg: 220 13% 13%;
+    --chat-header: 173 80% 40%;
+    --message-sent: 173 80% 40%;
+    --message-received: 220 13% 18%;
+    --message-hover: 220 13% 22%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  
+  body {
+    @apply bg-background text-foreground font-sans;
+    font-weight: 600;
+  }
+}
+
+@layer utilities {
+  .message-enter {
+    animation: messageSlideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  @keyframes messageSlideIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .image-preview-enter {
+    animation: imageZoomIn 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  @keyframes imageZoomIn {
+    from {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+}
