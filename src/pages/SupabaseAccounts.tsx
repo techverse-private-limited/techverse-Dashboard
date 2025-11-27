@@ -58,11 +58,7 @@ const SupabaseAccounts = () => {
       .order("created_at", { ascending: false });
 
     if (error) {
-      toast({
-        title: "Error",
-        description: "Failed to load accounts",
-        variant: "destructive",
-      });
+      toast.error("Failed to load accounts");
       return;
     }
 
@@ -97,11 +93,7 @@ const SupabaseAccounts = () => {
     e.preventDefault();
 
     if (!formData.name.trim() || !formData.email.trim() || !formData.password.trim()) {
-      toast({
-        title: "Error",
-        description: "Please fill in all fields",
-        variant: "destructive",
-      });
+      toast.error("Please fill in all fields");
       return;
     }
 
@@ -119,18 +111,11 @@ const SupabaseAccounts = () => {
         .eq("id", editingAccount.id);
 
       if (error) {
-        toast({
-          title: "Error",
-          description: "Failed to update account",
-          variant: "destructive",
-        });
+        toast.error("Failed to update account");
         return;
       }
 
-      toast({
-        title: "Success",
-        description: "Account updated successfully",
-      });
+      toast.success("Account updated successfully");
     } else {
       const { error } = await supabase.from("supabase_accounts").insert({
         name: formData.name,
@@ -140,18 +125,11 @@ const SupabaseAccounts = () => {
       });
 
       if (error) {
-        toast({
-          title: "Error",
-          description: "Failed to create account",
-          variant: "destructive",
-        });
+        toast.error("Failed to create account");
         return;
       }
 
-      toast({
-        title: "Success",
-        description: "Account created successfully",
-      });
+      toast.success("Account created successfully");
     }
 
     setIsDialogOpen(false);
@@ -178,18 +156,11 @@ const SupabaseAccounts = () => {
       .eq("id", accountToDelete.id);
 
     if (error) {
-      toast({
-        title: "Error",
-        description: "Failed to delete account",
-        variant: "destructive",
-      });
+      toast.error("Failed to delete account");
       return;
     }
 
-    toast({
-      title: "Success",
-      description: "Account deleted successfully",
-    });
+    toast.success("Account deleted successfully");
 
     setDeleteDialogOpen(false);
     setAccountToDelete(null);

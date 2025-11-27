@@ -64,11 +64,7 @@ const Projects = () => {
       .order("created_at", { ascending: false });
 
     if (error) {
-      toast({
-        title: "Error",
-        description: "Failed to load projects",
-        variant: "destructive",
-      });
+      toast.error("Failed to load projects");
       return;
     }
 
@@ -144,11 +140,7 @@ const Projects = () => {
     e.preventDefault();
 
     if (!formData.name.trim()) {
-      toast({
-        title: "Error",
-        description: "Please enter a project name",
-        variant: "destructive",
-      });
+      toast.error("Please enter a project name");
       return;
     }
 
@@ -165,18 +157,11 @@ const Projects = () => {
         .eq("id", editingProject.id);
 
       if (error) {
-        toast({
-          title: "Error",
-          description: "Failed to update project",
-          variant: "destructive",
-        });
+        toast.error("Failed to update project");
         return;
       }
 
-      toast({
-        title: "Success",
-        description: "Project updated successfully",
-      });
+      toast.success("Project updated successfully");
     } else {
       const { error } = await supabase.from("projects").insert({
         name: formData.name,
@@ -186,18 +171,11 @@ const Projects = () => {
       });
 
       if (error) {
-        toast({
-          title: "Error",
-          description: "Failed to create project",
-          variant: "destructive",
-        });
+        toast.error("Failed to create project");
         return;
       }
 
-      toast({
-        title: "Success",
-        description: "Project created successfully",
-      });
+      toast.success("Project created successfully");
     }
 
     setIsDialogOpen(false);
@@ -223,18 +201,11 @@ const Projects = () => {
       .eq("id", projectToDelete.id);
 
     if (error) {
-      toast({
-        title: "Error",
-        description: "Failed to delete project",
-        variant: "destructive",
-      });
+      toast.error("Failed to delete project");
       return;
     }
 
-    toast({
-      title: "Success",
-      description: "Project deleted successfully",
-    });
+    toast.success("Project deleted successfully");
 
     setDeleteDialogOpen(false);
     setProjectToDelete(null);
