@@ -66,8 +66,8 @@ export function AppSidebar() {
     navigate("/login");
   };
   return <>
-      <Sidebar className={`${collapsed ? "w-20" : "w-72"} z-20`} collapsible="icon">
-        <SidebarContent className="flex flex-col h-full p-3">
+      <Sidebar className={`${collapsed ? "w-16" : "w-72"} z-20`} collapsible="icon">
+        <SidebarContent className={`flex flex-col h-full ${collapsed ? "p-2" : "p-3"}`}>
           {!collapsed && user && <div className="mx-3 mb-6 p-6 rounded-xl bg-gradient-to-br from-primary/10 to-accent/10 border border-border/50 backdrop-blur-sm shadow-lg">
               <div className="text-center space-y-2">
                 <h2 className="text-2xl font-bold text-foreground">{user.name}</h2>
@@ -76,18 +76,25 @@ export function AppSidebar() {
             </div>}
           
           <SidebarGroup className="flex-1 flex flex-col">
-            <SidebarGroupLabel className="text-xs font-semibold uppercase tracking-wider px-5 py-3 text-muted-foreground">
-              {!collapsed && "Main Menu"}
-            </SidebarGroupLabel>
+            {!collapsed && (
+              <SidebarGroupLabel className="text-xs font-semibold uppercase tracking-wider px-5 py-3 text-muted-foreground">
+                Main Menu
+              </SidebarGroupLabel>
+            )}
 
           <SidebarGroupContent className="flex flex-col">
-            <SidebarMenu className="space-y-4">
+            <SidebarMenu className={collapsed ? "space-y-2" : "space-y-4"}>
               {items.map(item => {
                 const active = isActive(item.url);
                 return <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton asChild isActive={active} className={`flex items-center gap-4 px-5 py-4 rounded-lg transition-colors ${active ? "bg-foreground text-background font-bold" : "hover:bg-sidebar-accent"}`}>
-                      <NavLink to={item.url} end>
-                        <item.icon className="h-6 w-6" />
+                    <SidebarMenuButton 
+                      asChild 
+                      isActive={active} 
+                      className={`flex items-center ${collapsed ? "justify-center p-3" : "gap-4 px-5 py-4"} rounded-lg transition-colors ${active ? "bg-foreground text-background font-bold" : "hover:bg-sidebar-accent"}`}
+                      tooltip={collapsed ? item.title : undefined}
+                    >
+                      <NavLink to={item.url} end className={collapsed ? "flex justify-center w-full" : ""}>
+                        <item.icon className={collapsed ? "h-5 w-5" : "h-6 w-6"} />
                         {!collapsed && <span className="font-semibold text-base">{item.title}</span>}
                       </NavLink>
                     </SidebarMenuButton>
@@ -101,8 +108,12 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton onClick={() => setShowLogoutDialog(true)} className="flex items-center gap-4 px-5 py-4 bg-destructive hover:bg-destructive/90 text-destructive-foreground transition-colors font-semibold rounded">
-                  <LogOut className="h-6 w-6" />
+                <SidebarMenuButton 
+                  onClick={() => setShowLogoutDialog(true)} 
+                  className={`flex items-center ${collapsed ? "justify-center p-3" : "gap-4 px-5 py-4"} bg-destructive hover:bg-destructive/90 text-destructive-foreground transition-colors font-semibold rounded`}
+                  tooltip={collapsed ? "Logout" : undefined}
+                >
+                  <LogOut className={collapsed ? "h-5 w-5" : "h-6 w-6"} />
                   {!collapsed && <span className="text-base">Logout</span>}
                 </SidebarMenuButton>
               </SidebarMenuItem>
