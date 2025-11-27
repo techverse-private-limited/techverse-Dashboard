@@ -4,8 +4,6 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Layout } from "./components/Layout";
-import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
 import Dashboard from "./pages/Dashboard";
 import Groups from "./pages/Groups";
 import GroupChat from "./pages/GroupChat";
@@ -83,41 +81,14 @@ const App = () => <QueryClientProvider client={queryClient}>
             </MainLayout>} />
           
           <Route path="/projects" element={<MainLayout>
-              <div className="flex items-start sm:items-center justify-between gap-4 mb-6 flex-col sm:flex-row">
-                <div className="min-w-0">
-                  <h1 className="text-xl sm:text-2xl font-bold">Projects</h1>
-                  <p className="text-xs sm:text-sm text-muted-foreground">Track and manage your projects.</p>
-                </div>
-                <Button className="gap-2 font-bold flex-shrink-0" size="sm">
-                  <Plus className="h-4 w-4 sm:h-5 sm:w-5" />
-                  <span className="hidden sm:inline">New Project</span>
-                </Button>
-              </div>
               <Projects />
             </MainLayout>} />
           
           <Route path="/supabase-accounts" element={<MainLayout>
-              <div className="flex items-start sm:items-center justify-between gap-4 mb-6 flex-col sm:flex-row">
-                <div className="min-w-0">
-                  <h1 className="text-xl sm:text-2xl font-bold">Supabase Accounts</h1>
-                  <p className="text-xs sm:text-sm text-muted-foreground">Manage your database connections and accounts.</p>
-                </div>
-                
-              </div>
               <SupabaseAccounts />
             </MainLayout>} />
           
           <Route path="/github-links" element={<MainLayout>
-              <div className="flex items-start sm:items-center justify-between gap-4 mb-6 flex-col sm:flex-row">
-                <div className="min-w-0">
-                  <h1 className="text-xl sm:text-2xl font-bold">GitHub Links</h1>
-                  <p className="text-xs sm:text-sm text-muted-foreground">Connect and manage your GitHub repositories.</p>
-                </div>
-                <Button className="gap-2 font-bold flex-shrink-0" size="sm">
-                  <Plus className="h-4 w-4 sm:h-5 sm:w-5" />
-                  <span className="hidden sm:inline">Add Repository</span>
-                </Button>
-              </div>
               <GitHubLinks />
             </MainLayout>} />
           

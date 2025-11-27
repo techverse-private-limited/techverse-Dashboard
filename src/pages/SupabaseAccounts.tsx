@@ -197,6 +197,14 @@ const SupabaseAccounts = () => {
 
   return (
     <>
+      <div className="flex items-start sm:items-center justify-between gap-4 mb-6 flex-col sm:flex-row">
+        <div className="min-w-0">
+          <h1 className="text-xl sm:text-2xl font-bold">Supabase Accounts</h1>
+          <p className="text-xs sm:text-sm text-muted-foreground">
+            Manage your database connections and accounts
+          </p>
+        </div>
+      </div>
       <Tabs defaultValue="accounts" className="w-full">
         <div className="flex items-center justify-between mb-6">
           <TabsList>
