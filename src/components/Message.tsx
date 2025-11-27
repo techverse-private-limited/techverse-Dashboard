@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Pencil, Trash2, X, Check } from "lucide-react";
+import { Pencil, Trash2, X, Check, Download } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
   AlertDialog,
@@ -14,6 +14,10 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+} from "@/components/ui/dialog";
 
 export interface MessageType {
   id: string;
@@ -36,6 +40,7 @@ export const Message = ({ message, onEdit, onDelete }: MessageProps) => {
   const [editText, setEditText] = useState(message.text);
   const [showActions, setShowActions] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showImageDialog, setShowImageDialog] = useState(false);
   const messageRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -50,6 +55,7 @@ export const Message = ({ message, onEdit, onDelete }: MessageProps) => {
       return () => document.removeEventListener('mousedown', handleClickOutside);
     }
   }, [showActions]);
+
   const formattedTime = message.timestamp.toLocaleTimeString('en-US', {
     hour: 'numeric',
     minute: '2-digit',
@@ -80,6 +86,32 @@ export const Message = ({ message, onEdit, onDelete }: MessageProps) => {
     setShowDeleteDialog(false);
   };
 
+  const handleDownloadImage = async () => {
+    if (!message.image) return;
+    
+    try {
+      const response = await fetch(message.image);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `image-${message.id}.${blob.type.split('/')[1] || 'png'}`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error downloading image:', error);
+      // Fallback: open in new tab
+      window.open(message.image, '_blank');
+    }
+  };
+
+  const handleImageClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setShowImageDialog(true);
+  };
+
   return (
     <div
       ref={messageRef}
@@ -88,6 +120,7 @@ export const Message = ({ message, onEdit, onDelete }: MessageProps) => {
         message.isSent ? "flex-row-reverse" : "flex-row"
       )}
     >
+      {/* Delete Confirmation Dialog */}
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -104,6 +137,29 @@ export const Message = ({ message, onEdit, onDelete }: MessageProps) => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Image Preview Dialog */}
+      <Dialog open={showImageDialog} onOpenChange={setShowImageDialog}>
+        <DialogContent className="max-w-3xl p-0 overflow-hidden" aria-describedby={undefined}>
+          <div className="relative">
+            <img
+              src={message.image}
+              alt="Full size"
+              className="w-full h-auto max-h-[80vh] object-contain"
+            />
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+              <Button
+                onClick={handleDownloadImage}
+                className="bg-primary hover:bg-primary/90 shadow-lg"
+              >
+                <Download className="h-4 w-4 mr-2" />
+                Download
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {!message.isSent && (
         <Avatar className="h-8 w-8 sm:h-10 sm:w-10 flex-shrink-0">
           <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${message.sender}`} />
@@ -134,11 +190,19 @@ export const Message = ({ message, onEdit, onDelete }: MessageProps) => {
             onClick={() => message.isSent && setShowActions(!showActions)}
           >
             {message.image && (
-              <img
-                src={message.image}
-                alt="Uploaded content"
-                className="rounded-lg mb-2 max-w-full h-auto image-preview-enter"
-              />
+              <div 
+                className="relative group/image cursor-pointer"
+                onClick={handleImageClick}
+              >
+                <img
+                  src={message.image}
+                  alt="Uploaded content"
+                  className="rounded-lg mb-2 max-w-full h-auto max-h-64 object-cover image-preview-enter hover:opacity-90 transition-opacity"
+                />
+                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/image:opacity-100 transition-opacity bg-black/30 rounded-lg">
+                  <span className="text-white text-sm font-medium">Click to view</span>
+                </div>
+              </div>
             )}
             {isEditing ? (
               <div className="flex items-center gap-2">
