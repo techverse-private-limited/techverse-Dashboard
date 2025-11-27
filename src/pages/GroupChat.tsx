@@ -51,17 +51,10 @@ const GroupChat = () => {
 
       if (error) throw error;
 
-      toast({
-        title: "Success",
-        description: "Message updated"
-      });
+      toast.success("Message updated");
     } catch (error: any) {
       console.error('Error updating message:', error);
-      toast({
-        title: "Error",
-        description: "Failed to update message",
-        variant: "destructive"
-      });
+      toast.error("Failed to update message");
     }
   };
 
@@ -76,17 +69,10 @@ const GroupChat = () => {
 
       setMessages(prev => prev.filter(m => m.id !== messageId));
       
-      toast({
-        title: "Success",
-        description: "Message deleted"
-      });
+      toast.success("Message deleted");
     } catch (error: any) {
       console.error('Error deleting message:', error);
-      toast({
-        title: "Error",
-        description: "Failed to delete message",
-        variant: "destructive"
-      });
+      toast.error("Failed to delete message");
     }
   };
 
@@ -217,11 +203,7 @@ const GroupChat = () => {
       }
     } catch (error: any) {
       console.error('Error fetching messages:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load messages",
-        variant: "destructive"
-      });
+      toast.error("Failed to load messages");
     } finally {
       setLoading(false);
     }
@@ -339,22 +321,14 @@ const GroupChat = () => {
       const userStr = localStorage.getItem("user");
       
       if (!userStr) {
-        toast({
-          title: "Error",
-          description: "Please login to send messages",
-          variant: "destructive"
-        });
+        toast.error("Please login to send messages");
         return;
       }
       
       const user = JSON.parse(userStr);
       
       if (!group?.id) {
-        toast({
-          title: "Error",
-          description: "Invalid group",
-          variant: "destructive"
-        });
+        toast.error("Invalid group");
         return;
       }
 
@@ -400,11 +374,7 @@ const GroupChat = () => {
       }
     } catch (error: any) {
       console.error('Error sending message:', error);
-      toast({
-        title: "Error",
-        description: error.message || "Failed to send message",
-        variant: "destructive"
-      });
+      toast.error(error.message || "Failed to send message");
     }
   };
 
