@@ -12,6 +12,8 @@ interface CreateSupabaseAccountDialogProps {
   onAccountCreated: () => void;
 }
 
+const DEFAULT_USER_ID = "73a85202-b748-4af6-b67a-b8e2c4256116";
+
 export const CreateSupabaseAccountDialog = ({ open, onOpenChange, onAccountCreated }: CreateSupabaseAccountDialogProps) => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -32,19 +34,9 @@ export const CreateSupabaseAccountDialog = ({ open, onOpenChange, onAccountCreat
 
     setLoading(true);
 
-    // Get user from localStorage (custom auth)
+    // Get user from localStorage (custom auth), fallback to default user
     const userStr = localStorage.getItem("user");
-    if (!userStr) {
-      toast({
-        title: "Error",
-        description: "You must be logged in to create accounts",
-        variant: "destructive",
-      });
-      setLoading(false);
-      return;
-    }
-
-    const user = JSON.parse(userStr);
+    const userId = userStr ? JSON.parse(userStr).id : DEFAULT_USER_ID;
 
     const { error } = await supabase
       .from("supabase_accounts")
@@ -52,7 +44,7 @@ export const CreateSupabaseAccountDialog = ({ open, onOpenChange, onAccountCreat
         name,
         email,
         password,
-        user_id: user.id,
+        user_id: userId,
       });
 
     setLoading(false);

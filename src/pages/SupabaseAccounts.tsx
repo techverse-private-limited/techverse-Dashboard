@@ -5,8 +5,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Database, MoreVertical, Plus, Pencil, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
-import { CreateSupabaseAccountDialog } from "@/components/CreateSupabaseAccountDialog";
-import { EditSupabaseAccountDialog } from "@/components/EditSupabaseAccountDialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -29,31 +36,25 @@ interface SupabaseAccount {
   name: string;
   email: string;
   password: string;
+  user_id: string;
+  created_at: string;
 }
+
+const DEFAULT_USER_ID = "73a85202-b748-4af6-b67a-b8e2c4256116";
 
 const SupabaseAccounts = () => {
   const [accounts, setAccounts] = useState<SupabaseAccount[]>([]);
   const [loading, setLoading] = useState(true);
-  const [createDialogOpen, setCreateDialogOpen] = useState(false);
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingAccount, setEditingAccount] = useState<SupabaseAccount | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [selectedAccount, setSelectedAccount] = useState<SupabaseAccount | null>(null);
+  const [accountToDelete, setAccountToDelete] = useState<SupabaseAccount | null>(null);
+  const [formData, setFormData] = useState({ name: "", email: "", password: "" });
 
   const fetchAccounts = async () => {
-    // Get user from localStorage (custom auth)
-    const userStr = localStorage.getItem("user");
-    if (!userStr) {
-      setAccounts([]);
-      setLoading(false);
-      return;
-    }
-
-    const user = JSON.parse(userStr);
-
     const { data, error } = await supabase
       .from("supabase_accounts")
       .select("*")
-      .eq("user_id", user.id)
       .order("created_at", { ascending: false });
 
     if (error) {
@@ -73,7 +74,7 @@ const SupabaseAccounts = () => {
     fetchAccounts();
 
     const channel = supabase
-      .channel("supabase-accounts-changes")
+      .channel("supabase-accounts-realtime")
       .on(
         "postgres_changes",
         {
@@ -92,13 +93,89 @@ const SupabaseAccounts = () => {
     };
   }, []);
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!formData.name.trim() || !formData.email.trim() || !formData.password.trim()) {
+      toast({
+        title: "Error",
+        description: "Please fill in all fields",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const userStr = localStorage.getItem("user");
+    const userId = userStr ? JSON.parse(userStr).id : DEFAULT_USER_ID;
+
+    if (editingAccount) {
+      const { error } = await supabase
+        .from("supabase_accounts")
+        .update({
+          name: formData.name,
+          email: formData.email,
+          password: formData.password,
+        })
+        .eq("id", editingAccount.id);
+
+      if (error) {
+        toast({
+          title: "Error",
+          description: "Failed to update account",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      toast({
+        title: "Success",
+        description: "Account updated successfully",
+      });
+    } else {
+      const { error } = await supabase.from("supabase_accounts").insert({
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
+        user_id: userId,
+      });
+
+      if (error) {
+        toast({
+          title: "Error",
+          description: "Failed to create account",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      toast({
+        title: "Success",
+        description: "Account created successfully",
+      });
+    }
+
+    setIsDialogOpen(false);
+    setEditingAccount(null);
+    setFormData({ name: "", email: "", password: "" });
+  };
+
+  const handleEdit = (account: SupabaseAccount) => {
+    setEditingAccount(account);
+    setFormData({
+      name: account.name,
+      email: account.email,
+      password: account.password,
+    });
+    setIsDialogOpen(true);
+  };
+
   const handleDelete = async () => {
-    if (!selectedAccount) return;
+    if (!accountToDelete) return;
 
     const { error } = await supabase
       .from("supabase_accounts")
       .delete()
-      .eq("id", selectedAccount.id);
+      .eq("id", accountToDelete.id);
 
     if (error) {
       toast({
@@ -115,17 +192,7 @@ const SupabaseAccounts = () => {
     });
 
     setDeleteDialogOpen(false);
-    setSelectedAccount(null);
-  };
-
-  const handleEdit = (account: SupabaseAccount) => {
-    setSelectedAccount(account);
-    setEditDialogOpen(true);
-  };
-
-  const handleDeleteClick = (account: SupabaseAccount) => {
-    setSelectedAccount(account);
-    setDeleteDialogOpen(true);
+    setAccountToDelete(null);
   };
 
   return (
@@ -136,7 +203,13 @@ const SupabaseAccounts = () => {
             <TabsTrigger value="accounts">Accounts</TabsTrigger>
             <TabsTrigger value="settings">Settings</TabsTrigger>
           </TabsList>
-          <Button onClick={() => setCreateDialogOpen(true)}>
+          <Button
+            onClick={() => {
+              setEditingAccount(null);
+              setFormData({ name: "", email: "", password: "" });
+              setIsDialogOpen(true);
+            }}
+          >
             <Plus className="h-4 w-4 mr-2" />
             Add Account
           </Button>
@@ -186,7 +259,10 @@ const SupabaseAccounts = () => {
                           Edit
                         </DropdownMenuItem>
                         <DropdownMenuItem
-                          onClick={() => handleDeleteClick(account)}
+                          onClick={() => {
+                            setAccountToDelete(account);
+                            setDeleteDialogOpen(true);
+                          }}
                           className="text-destructive"
                         >
                           <Trash2 className="h-4 w-4 mr-2" />
@@ -214,35 +290,71 @@ const SupabaseAccounts = () => {
         </TabsContent>
       </Tabs>
 
-      <CreateSupabaseAccountDialog
-        open={createDialogOpen}
-        onOpenChange={setCreateDialogOpen}
-        onAccountCreated={fetchAccounts}
-      />
-
-      {selectedAccount && (
-        <EditSupabaseAccountDialog
-          open={editDialogOpen}
-          onOpenChange={setEditDialogOpen}
-          accountId={selectedAccount.id}
-          currentName={selectedAccount.name}
-          currentEmail={selectedAccount.email}
-          currentPassword={selectedAccount.password}
-          onAccountUpdated={fetchAccounts}
-        />
-      )}
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {editingAccount ? "Edit Account" : "Create New Account"}
+            </DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSubmit}>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="name">Project Name</Label>
+                <Input
+                  id="name"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  placeholder="Production Project"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  placeholder="prod@example.com"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="password">Password</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  placeholder="Enter password"
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button type="submit">
+                {editingAccount ? "Update" : "Create"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete "{selectedAccount?.name}". This action cannot be undone.
+              This will permanently delete "{accountToDelete?.name}". This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+            <AlertDialogAction
+              onClick={handleDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>
