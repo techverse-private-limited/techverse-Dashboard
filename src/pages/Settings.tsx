@@ -3,10 +3,10 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Eye, EyeOff, Copy, Edit, Trash2, Plus, Search, ChevronDown } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Eye, EyeOff, Copy, Edit, Trash2, Plus, Search } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
   Accordion,
@@ -14,107 +14,111 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { supabase } from "@/integrations/supabase/client";
 
-interface LoginCredential {
+interface Project {
   id: string;
-  username: string;
-  password: string;
-  notes?: string;
-  label?: string;
+  name: string;
 }
 
-interface WebsitePassword {
+interface ProjectCredential {
   id: string;
-  website: string;
-  url: string;
-  logins: LoginCredential[];
+  project_id: string;
+  username: string;
+  password: string;
+  description: string | null;
+  created_at: string;
+}
+
+interface GroupedCredentials {
+  project: Project;
+  credentials: ProjectCredential[];
 }
 
 export default function Settings() {
-  const [websites, setWebsites] = useState<WebsitePassword[]>([
-    {
-      id: "1",
-      website: "GitHub",
-      url: "https://github.com",
-      logins: [
-        {
-          id: "1-1",
-          username: "user@example.com",
-          password: "MySecurePass123!",
-          label: "Work Account",
-          notes: "Main work GitHub account"
-        },
-        {
-          id: "1-2",
-          username: "personal@gmail.com",
-          password: "PersonalGH2024!",
-          label: "Personal Account",
-          notes: "Personal projects"
-        }
-      ]
-    },
-    {
-      id: "2",
-      website: "Gmail",
-      url: "https://mail.google.com",
-      logins: [
-        {
-          id: "2-1",
-          username: "myemail@gmail.com",
-          password: "Gmail2024Secure",
-          label: "Personal Email",
-          notes: "Main email account"
-        }
-      ]
-    },
-    {
-      id: "3",
-      website: "Supabase",
-      url: "https://supabase.com",
-      logins: [
-        {
-          id: "3-1",
-          username: "dev@company.com",
-          password: "Supabase!2024",
-          label: "Production",
-          notes: "Production database access"
-        },
-        {
-          id: "3-2",
-          username: "dev-staging@company.com",
-          password: "SupabaseStaging24!",
-          label: "Staging",
-          notes: "Staging environment"
-        }
-      ]
-    }
-  ]);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [credentials, setCredentials] = useState<ProjectCredential[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [visiblePasswords, setVisiblePasswords] = useState<Set<string>>(new Set());
-  const [isWebsiteDialogOpen, setIsWebsiteDialogOpen] = useState(false);
-  const [isLoginDialogOpen, setIsLoginDialogOpen] = useState(false);
-  const [editingWebsiteId, setEditingWebsiteId] = useState<string | null>(null);
-  const [editingLoginId, setEditingLoginId] = useState<string | null>(null);
-  const [currentWebsiteId, setCurrentWebsiteId] = useState<string | null>(null);
-  const [websiteFormData, setWebsiteFormData] = useState({
-    website: "",
-    url: ""
-  });
-  const [loginFormData, setLoginFormData] = useState({
+  const [isCredentialDialogOpen, setIsCredentialDialogOpen] = useState(false);
+  const [editingCredential, setEditingCredential] = useState<ProjectCredential | null>(null);
+  const [selectedProjectId, setSelectedProjectId] = useState<string>("");
+  const [formData, setFormData] = useState({
     username: "",
     password: "",
-    label: "",
-    notes: ""
+    description: ""
   });
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const userData = localStorage.getItem("user");
-    if (!userData) {
-      navigate("/login");
+  const fetchData = async () => {
+    const [projectsResult, credentialsResult] = await Promise.all([
+      supabase.from("projects").select("id, name").order("name"),
+      supabase.from("project_credentials").select("*").order("created_at", { ascending: false })
+    ]);
+
+    if (projectsResult.error) {
+      toast({
+        title: "Error",
+        description: "Failed to load projects",
+        variant: "destructive",
+      });
     }
-  }, [navigate]);
+
+    if (credentialsResult.error) {
+      toast({
+        title: "Error",
+        description: "Failed to load credentials",
+        variant: "destructive",
+      });
+    }
+
+    setProjects(projectsResult.data || []);
+    setCredentials(credentialsResult.data || []);
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    fetchData();
+
+    const channel = supabase
+      .channel("credentials-realtime")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "project_credentials",
+        },
+        () => {
+          fetchData();
+        }
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "projects",
+        },
+        () => {
+          fetchData();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
 
   const togglePasswordVisibility = (id: string) => {
     setVisiblePasswords(prev => {
@@ -136,153 +140,137 @@ export default function Settings() {
     });
   };
 
-  const handleWebsiteSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (editingWebsiteId) {
-      setWebsites(prev => prev.map(w => 
-        w.id === editingWebsiteId 
-          ? { ...w, website: websiteFormData.website, url: websiteFormData.url }
-          : w
-      ));
+    if (!selectedProjectId || !formData.username.trim() || !formData.password.trim()) {
+      toast({
+        title: "Error",
+        description: "Please fill in all required fields",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (editingCredential) {
+      const { error } = await supabase
+        .from("project_credentials")
+        .update({
+          project_id: selectedProjectId,
+          username: formData.username,
+          password: formData.password,
+          description: formData.description || null,
+        })
+        .eq("id", editingCredential.id);
+
+      if (error) {
+        toast({
+          title: "Error",
+          description: "Failed to update credential",
+          variant: "destructive",
+        });
+        return;
+      }
+
       toast({
         title: "Updated!",
-        description: "Website updated successfully",
+        description: "Credential updated successfully",
       });
     } else {
-      const newWebsite: WebsitePassword = {
-        id: Date.now().toString(),
-        website: websiteFormData.website,
-        url: websiteFormData.url,
-        logins: []
-      };
-      setWebsites(prev => [...prev, newWebsite]);
+      const { error } = await supabase
+        .from("project_credentials")
+        .insert({
+          project_id: selectedProjectId,
+          username: formData.username,
+          password: formData.password,
+          description: formData.description || null,
+        });
+
+      if (error) {
+        toast({
+          title: "Error",
+          description: "Failed to create credential",
+          variant: "destructive",
+        });
+        return;
+      }
+
       toast({
         title: "Added!",
-        description: "New website added successfully",
+        description: "Credential added successfully",
       });
     }
     
-    setIsWebsiteDialogOpen(false);
-    resetWebsiteForm();
+    setIsCredentialDialogOpen(false);
+    resetForm();
   };
 
-  const handleLoginSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!currentWebsiteId) return;
+  const handleEdit = (credential: ProjectCredential) => {
+    setEditingCredential(credential);
+    setSelectedProjectId(credential.project_id);
+    setFormData({
+      username: credential.username,
+      password: credential.password,
+      description: credential.description || ""
+    });
+    setIsCredentialDialogOpen(true);
+  };
 
-    if (editingLoginId) {
-      setWebsites(prev => prev.map(w => 
-        w.id === currentWebsiteId
-          ? {
-              ...w,
-              logins: w.logins.map(l =>
-                l.id === editingLoginId ? { ...loginFormData, id: editingLoginId } : l
-              )
-            }
-          : w
-      ));
+  const handleDelete = async (credentialId: string) => {
+    const { error } = await supabase
+      .from("project_credentials")
+      .delete()
+      .eq("id", credentialId);
+
+    if (error) {
       toast({
-        title: "Updated!",
-        description: "Login credentials updated successfully",
+        title: "Error",
+        description: "Failed to delete credential",
+        variant: "destructive",
       });
-    } else {
-      const newLogin: LoginCredential = {
-        id: `${currentWebsiteId}-${Date.now()}`,
-        ...loginFormData
-      };
-      setWebsites(prev => prev.map(w =>
-        w.id === currentWebsiteId
-          ? { ...w, logins: [...w.logins, newLogin] }
-          : w
-      ));
-      toast({
-        title: "Added!",
-        description: "New login added successfully",
-      });
+      return;
     }
-    
-    setIsLoginDialogOpen(false);
-    resetLoginForm();
-  };
 
-  const handleEditWebsite = (website: WebsitePassword) => {
-    setEditingWebsiteId(website.id);
-    setWebsiteFormData({
-      website: website.website,
-      url: website.url
-    });
-    setIsWebsiteDialogOpen(true);
-  };
-
-  const handleEditLogin = (websiteId: string, login: LoginCredential) => {
-    setCurrentWebsiteId(websiteId);
-    setEditingLoginId(login.id);
-    setLoginFormData({
-      username: login.username,
-      password: login.password,
-      label: login.label || "",
-      notes: login.notes || ""
-    });
-    setIsLoginDialogOpen(true);
-  };
-
-  const handleAddLogin = (websiteId: string) => {
-    setCurrentWebsiteId(websiteId);
-    setEditingLoginId(null);
-    resetLoginForm();
-    setIsLoginDialogOpen(true);
-  };
-
-  const handleDeleteWebsite = (id: string) => {
-    setWebsites(prev => prev.filter(w => w.id !== id));
     toast({
       title: "Deleted",
-      description: "Website and all logins removed",
+      description: "Credential removed successfully",
       variant: "destructive",
     });
   };
 
-  const handleDeleteLogin = (websiteId: string, loginId: string) => {
-    setWebsites(prev => prev.map(w =>
-      w.id === websiteId
-        ? { ...w, logins: w.logins.filter(l => l.id !== loginId) }
-        : w
-    ));
-    toast({
-      title: "Deleted",
-      description: "Login removed successfully",
-      variant: "destructive",
-    });
-  };
-
-  const resetWebsiteForm = () => {
-    setWebsiteFormData({
-      website: "",
-      url: ""
-    });
-    setEditingWebsiteId(null);
-  };
-
-  const resetLoginForm = () => {
-    setLoginFormData({
+  const resetForm = () => {
+    setFormData({
       username: "",
       password: "",
-      label: "",
-      notes: ""
+      description: ""
     });
-    setEditingLoginId(null);
+    setEditingCredential(null);
+    setSelectedProjectId("");
   };
 
-  const filteredWebsites = websites.filter(w =>
-    w.website.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    w.url.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    w.logins.some(l => 
-      l.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      l.label?.toLowerCase().includes(searchQuery.toLowerCase())
+  // Group credentials by project
+  const groupedCredentials: GroupedCredentials[] = projects
+    .map(project => ({
+      project,
+      credentials: credentials.filter(c => c.project_id === project.id)
+    }))
+    .filter(group => group.credentials.length > 0);
+
+  const filteredGroups = groupedCredentials.filter(group =>
+    group.project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    group.credentials.some(c => 
+      c.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      c.description?.toLowerCase().includes(searchQuery.toLowerCase())
     )
   );
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <p className="text-muted-foreground">Loading...</p>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -290,121 +278,90 @@ export default function Settings() {
         <div className="min-w-0">
           <h1 className="text-xl sm:text-2xl font-bold">Password Manager</h1>
           <p className="text-xs sm:text-sm text-muted-foreground">
-            Securely store and manage website login credentials
+            Securely store and manage project login credentials
           </p>
         </div>
         <Button 
           className="gap-2 font-bold flex-shrink-0" 
           size="sm"
-          onClick={() => setIsWebsiteDialogOpen(true)}
+          onClick={() => {
+            resetForm();
+            setIsCredentialDialogOpen(true);
+          }}
         >
           <Plus className="h-4 w-4" />
-          <span className="hidden sm:inline">Add Website</span>
+          <span className="hidden sm:inline">Add Credential</span>
         </Button>
       </div>
 
-      <Dialog open={isWebsiteDialogOpen} onOpenChange={(open) => {
-        setIsWebsiteDialogOpen(open);
-        if (!open) resetWebsiteForm();
+      <Dialog open={isCredentialDialogOpen} onOpenChange={(open) => {
+        setIsCredentialDialogOpen(open);
+        if (!open) resetForm();
       }}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
-            <DialogTitle>{editingWebsiteId ? "Edit" : "Add"} Website</DialogTitle>
+            <DialogTitle>{editingCredential ? "Edit" : "Add"} Credential</DialogTitle>
             <DialogDescription>
-              {editingWebsiteId ? "Update" : "Add a new"} website to store login credentials
+              {editingCredential ? "Update" : "Add"} login credentials for a project
             </DialogDescription>
           </DialogHeader>
-          <form onSubmit={handleWebsiteSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid gap-2">
-              <Label htmlFor="website">Website Name *</Label>
-              <Input
-                id="website"
-                value={websiteFormData.website}
-                onChange={(e) => setWebsiteFormData({ ...websiteFormData, website: e.target.value })}
-                placeholder="e.g., GitHub, Gmail"
-                required
-              />
+              <Label htmlFor="project">Project *</Label>
+              <Select value={selectedProjectId} onValueChange={setSelectedProjectId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a project" />
+                </SelectTrigger>
+                <SelectContent>
+                  {projects.map(project => (
+                    <SelectItem key={project.id} value={project.id}>
+                      {project.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {projects.length === 0 && (
+                <p className="text-xs text-muted-foreground">
+                  No projects available. Create a project first.
+                </p>
+              )}
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="url">Website URL *</Label>
+              <Label htmlFor="username">Username/Email *</Label>
               <Input
-                id="url"
-                type="url"
-                value={websiteFormData.url}
-                onChange={(e) => setWebsiteFormData({ ...websiteFormData, url: e.target.value })}
-                placeholder="https://example.com"
-                required
-              />
-            </div>
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setIsWebsiteDialogOpen(false)}>
-                Cancel
-              </Button>
-              <Button type="submit">
-                {editingWebsiteId ? "Update" : "Add"} Website
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={isLoginDialogOpen} onOpenChange={(open) => {
-        setIsLoginDialogOpen(open);
-        if (!open) resetLoginForm();
-      }}>
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle>{editingLoginId ? "Edit" : "Add"} Login</DialogTitle>
-            <DialogDescription>
-              {editingLoginId ? "Update" : "Add"} login credentials for this website
-            </DialogDescription>
-          </DialogHeader>
-          <form onSubmit={handleLoginSubmit} className="space-y-4">
-            <div className="grid gap-2">
-              <Label htmlFor="label">Account Label</Label>
-              <Input
-                id="label"
-                value={loginFormData.label}
-                onChange={(e) => setLoginFormData({ ...loginFormData, label: e.target.value })}
-                placeholder="e.g., Work Account, Personal"
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="login-username">Username/Email *</Label>
-              <Input
-                id="login-username"
-                value={loginFormData.username}
-                onChange={(e) => setLoginFormData({ ...loginFormData, username: e.target.value })}
+                id="username"
+                value={formData.username}
+                onChange={(e) => setFormData({ ...formData, username: e.target.value })}
                 placeholder="your@email.com"
                 required
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="login-password">Password *</Label>
+              <Label htmlFor="password">Password *</Label>
               <Input
-                id="login-password"
+                id="password"
                 type="password"
-                value={loginFormData.password}
-                onChange={(e) => setLoginFormData({ ...loginFormData, password: e.target.value })}
+                value={formData.password}
+                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                 placeholder="••••••••"
                 required
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="login-notes">Notes (Optional)</Label>
+              <Label htmlFor="description">Description (Optional)</Label>
               <Input
-                id="login-notes"
-                value={loginFormData.notes}
-                onChange={(e) => setLoginFormData({ ...loginFormData, notes: e.target.value })}
+                id="description"
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 placeholder="Additional notes..."
               />
             </div>
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setIsLoginDialogOpen(false)}>
+              <Button type="button" variant="outline" onClick={() => setIsCredentialDialogOpen(false)}>
                 Cancel
               </Button>
-              <Button type="submit">
-                {editingLoginId ? "Update" : "Add"} Login
+              <Button type="submit" disabled={projects.length === 0}>
+                {editingCredential ? "Update" : "Add"} Credential
               </Button>
             </DialogFooter>
           </form>
@@ -415,178 +372,129 @@ export default function Settings() {
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search by website, username, or label..."
+            placeholder="Search by project, username, or description..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-10"
           />
         </div>
 
-        {filteredWebsites.length === 0 ? (
+        {filteredGroups.length === 0 ? (
           <Card>
             <CardContent className="flex flex-col items-center justify-center py-12">
               <p className="text-muted-foreground mb-4">
-                {searchQuery ? "No websites found matching your search" : "No websites saved yet"}
+                {searchQuery ? "No credentials found matching your search" : "No credentials saved yet"}
               </p>
-              {!searchQuery && (
-                <Button onClick={() => setIsWebsiteDialogOpen(true)}>
+              {!searchQuery && projects.length > 0 && (
+                <Button onClick={() => setIsCredentialDialogOpen(true)}>
                   <Plus className="h-4 w-4 mr-2" />
-                  Add Your First Website
+                  Add Your First Credential
                 </Button>
+              )}
+              {!searchQuery && projects.length === 0 && (
+                <p className="text-sm text-muted-foreground">
+                  Create a project first to add credentials.
+                </p>
               )}
             </CardContent>
           </Card>
         ) : (
           <Accordion type="multiple" className="space-y-4">
-            {filteredWebsites.map((website) => (
+            {filteredGroups.map((group) => (
               <AccordionItem 
-                key={website.id} 
-                value={website.id}
+                key={group.project.id} 
+                value={group.project.id}
                 className="border rounded-lg bg-card hover:shadow-md transition-shadow"
               >
-                <div className="flex items-center gap-2 pr-4">
-                  <AccordionTrigger className="flex-1 px-6 py-4 hover:no-underline">
-                    <div className="flex items-center justify-between w-full pr-4">
-                      <div className="flex items-center gap-3">
-                        <div className="text-left">
-                          <h3 className="text-lg font-bold">{website.website}</h3>
-                          <a 
-                            href={website.url} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="text-sm text-muted-foreground hover:underline"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            {website.url}
-                          </a>
-                        </div>
+                <AccordionTrigger className="px-6 py-4 hover:no-underline">
+                  <div className="flex items-center justify-between w-full pr-4">
+                    <div className="flex items-center gap-3">
+                      <div className="text-left">
+                        <h3 className="text-lg font-bold">{group.project.name}</h3>
                       </div>
-                      <Badge variant="secondary" className="ml-4">
-                        {website.logins.length} {website.logins.length === 1 ? 'login' : 'logins'}
-                      </Badge>
                     </div>
-                  </AccordionTrigger>
-                  <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => handleEditWebsite(website)}
-                    >
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => handleDeleteWebsite(website.id)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    <Badge variant="secondary" className="ml-4">
+                      {group.credentials.length} {group.credentials.length === 1 ? 'credential' : 'credentials'}
+                    </Badge>
                   </div>
-                </div>
+                </AccordionTrigger>
 
                 <AccordionContent className="px-6 pb-4">
-                  <div className="space-y-4 pt-2">
-                    <div className="flex justify-end">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleAddLogin(website.id)}
-                        className="gap-2"
-                      >
-                        <Plus className="h-4 w-4" />
-                        Add Login
-                      </Button>
-                    </div>
+                  <div className="space-y-3 pt-2">
+                    {group.credentials.map((credential) => (
+                      <Card key={credential.id} className="bg-muted/50">
+                        <CardContent className="p-4 space-y-3">
+                          <div className="flex items-start justify-between">
+                            {credential.description && (
+                              <Badge variant="outline" className="mb-2">
+                                {credential.description}
+                              </Badge>
+                            )}
+                            <div className="flex gap-2 ml-auto">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8"
+                                onClick={() => handleEdit(credential)}
+                              >
+                                <Edit className="h-3 w-3" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8"
+                                onClick={() => handleDelete(credential.id)}
+                              >
+                                <Trash2 className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          </div>
 
-                    {website.logins.length === 0 ? (
-                      <div className="text-center py-8 text-muted-foreground">
-                        No logins added yet
-                      </div>
-                    ) : (
-                      <div className="space-y-3">
-                        {website.logins.map((login) => (
-                          <Card key={login.id} className="bg-muted/50">
-                            <CardContent className="p-4 space-y-3">
-                              <div className="flex items-start justify-between">
-                                {login.label && (
-                                  <Badge variant="outline" className="mb-2">
-                                    {login.label}
-                                  </Badge>
+                          <div className="flex items-center justify-between p-3 bg-background rounded-lg">
+                            <div className="space-y-1 flex-1 min-w-0">
+                              <Label className="text-xs text-muted-foreground">Username</Label>
+                              <p className="font-mono text-sm truncate">{credential.username}</p>
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => copyToClipboard(credential.username, "Username")}
+                            >
+                              <Copy className="h-4 w-4" />
+                            </Button>
+                          </div>
+
+                          <div className="flex items-center justify-between p-3 bg-background rounded-lg">
+                            <div className="space-y-1 flex-1 min-w-0">
+                              <Label className="text-xs text-muted-foreground">Password</Label>
+                              <p className="font-mono text-sm truncate">
+                                {visiblePasswords.has(credential.id) ? credential.password : "••••••••••••"}
+                              </p>
+                            </div>
+                            <div className="flex gap-1">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => togglePasswordVisibility(credential.id)}
+                              >
+                                {visiblePasswords.has(credential.id) ? (
+                                  <EyeOff className="h-4 w-4" />
+                                ) : (
+                                  <Eye className="h-4 w-4" />
                                 )}
-                                <div className="flex gap-2 ml-auto">
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-8 w-8"
-                                    onClick={() => handleEditLogin(website.id, login)}
-                                  >
-                                    <Edit className="h-3 w-3" />
-                                  </Button>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-8 w-8"
-                                    onClick={() => handleDeleteLogin(website.id, login.id)}
-                                  >
-                                    <Trash2 className="h-3 w-3" />
-                                  </Button>
-                                </div>
-                              </div>
-
-                              <div className="flex items-center justify-between p-3 bg-background rounded-lg">
-                                <div className="space-y-1 flex-1 min-w-0">
-                                  <Label className="text-xs text-muted-foreground">Username</Label>
-                                  <p className="font-mono text-sm truncate">{login.username}</p>
-                                </div>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() => copyToClipboard(login.username, "Username")}
-                                >
-                                  <Copy className="h-4 w-4" />
-                                </Button>
-                              </div>
-
-                              <div className="flex items-center justify-between p-3 bg-background rounded-lg">
-                                <div className="space-y-1 flex-1 min-w-0">
-                                  <Label className="text-xs text-muted-foreground">Password</Label>
-                                  <p className="font-mono text-sm truncate">
-                                    {visiblePasswords.has(login.id) ? login.password : "••••••••••••"}
-                                  </p>
-                                </div>
-                                <div className="flex gap-1">
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() => togglePasswordVisibility(login.id)}
-                                  >
-                                    {visiblePasswords.has(login.id) ? (
-                                      <EyeOff className="h-4 w-4" />
-                                    ) : (
-                                      <Eye className="h-4 w-4" />
-                                    )}
-                                  </Button>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() => copyToClipboard(login.password, "Password")}
-                                  >
-                                    <Copy className="h-4 w-4" />
-                                  </Button>
-                                </div>
-                              </div>
-
-                              {login.notes && (
-                                <div className="pt-2 border-t">
-                                  <Label className="text-xs text-muted-foreground">Notes</Label>
-                                  <p className="text-sm mt-1">{login.notes}</p>
-                                </div>
-                              )}
-                            </CardContent>
-                          </Card>
-                        ))}
-                      </div>
-                    )}
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => copyToClipboard(credential.password, "Password")}
+                              >
+                                <Copy className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
                   </div>
                 </AccordionContent>
               </AccordionItem>
