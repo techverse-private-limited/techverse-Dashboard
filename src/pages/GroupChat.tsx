@@ -452,7 +452,7 @@ const GroupChat = () => {
         onEditMessage={handleEditMessage}
         onDeleteMessage={handleDeleteMessage}
       />
-      <MessageInput onSendMessage={handleSendMessage} />
+      <MessageInput onSendMessage={handleSendMessage} groupId={group?.id} />
     </div>
   );
 };
