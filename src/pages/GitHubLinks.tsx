@@ -196,6 +196,14 @@ const GitHubLinks = () => {
 
   return (
     <>
+      <div className="flex items-start sm:items-center justify-between gap-4 mb-6 flex-col sm:flex-row">
+        <div className="min-w-0">
+          <h1 className="text-xl sm:text-2xl font-bold">GitHub Links</h1>
+          <p className="text-xs sm:text-sm text-muted-foreground">
+            Connect and manage your GitHub repositories
+          </p>
+        </div>
+      </div>
       <Tabs defaultValue="repositories" className="w-full">
         <div className="flex items-center justify-between mb-6">
           <TabsList>
