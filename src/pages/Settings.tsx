@@ -368,11 +368,11 @@ export default function Settings() {
         </DialogContent>
       </Dialog>
 
-      <div className="max-w-6xl mx-auto space-y-6">
+      <div className="w-full space-y-4 sm:space-y-6">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search by project, username, or description..."
+            placeholder="Search..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-10"
@@ -399,42 +399,42 @@ export default function Settings() {
             </CardContent>
           </Card>
         ) : (
-          <Accordion type="multiple" className="space-y-4">
+          <Accordion type="multiple" className="space-y-3 sm:space-y-4">
             {filteredGroups.map((group) => (
               <AccordionItem 
                 key={group.project.id} 
                 value={group.project.id}
                 className="border rounded-lg bg-card hover:shadow-md transition-shadow"
               >
-                <AccordionTrigger className="px-6 py-4 hover:no-underline">
-                  <div className="flex items-center justify-between w-full pr-4">
-                    <div className="flex items-center gap-3">
+                <AccordionTrigger className="px-3 sm:px-6 py-3 sm:py-4 hover:no-underline">
+                  <div className="flex items-center justify-between w-full pr-2 sm:pr-4">
+                    <div className="flex items-center gap-2 sm:gap-3">
                       <div className="text-left">
-                        <h3 className="text-lg font-bold">{group.project.name}</h3>
+                        <h3 className="text-base sm:text-lg font-bold">{group.project.name}</h3>
                       </div>
                     </div>
-                    <Badge variant="secondary" className="ml-4">
+                    <Badge variant="secondary" className="ml-2 sm:ml-4 text-xs">
                       {group.credentials.length} {group.credentials.length === 1 ? 'credential' : 'credentials'}
                     </Badge>
                   </div>
                 </AccordionTrigger>
 
-                <AccordionContent className="px-6 pb-4">
+                <AccordionContent className="px-3 sm:px-6 pb-3 sm:pb-4">
                   <div className="space-y-3 pt-2">
                     {group.credentials.map((credential) => (
                       <Card key={credential.id} className="bg-muted/50">
-                        <CardContent className="p-4 space-y-3">
+                        <CardContent className="p-3 sm:p-4 space-y-2 sm:space-y-3">
                           <div className="flex items-start justify-between">
                             {credential.description && (
-                              <Badge variant="outline" className="mb-2">
+                              <Badge variant="outline" className="mb-2 text-xs">
                                 {credential.description}
                               </Badge>
                             )}
-                            <div className="flex gap-2 ml-auto">
+                            <div className="flex gap-1 sm:gap-2 ml-auto">
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                className="h-8 w-8"
+                                className="h-7 w-7 sm:h-8 sm:w-8"
                                 onClick={() => handleEdit(credential)}
                               >
                                 <Edit className="h-3 w-3" />
@@ -442,7 +442,7 @@ export default function Settings() {
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                className="h-8 w-8"
+                                className="h-7 w-7 sm:h-8 sm:w-8"
                                 onClick={() => handleDelete(credential.id)}
                               >
                                 <Trash2 className="h-3 w-3" />
@@ -450,31 +450,33 @@ export default function Settings() {
                             </div>
                           </div>
 
-                          <div className="flex items-center justify-between p-3 bg-background rounded-lg">
+                          <div className="flex items-center justify-between p-2 sm:p-3 bg-background rounded-lg gap-2">
                             <div className="space-y-1 flex-1 min-w-0">
                               <Label className="text-xs text-muted-foreground">Username</Label>
-                              <p className="font-mono text-sm truncate">{credential.username}</p>
+                              <p className="font-mono text-xs sm:text-sm truncate">{credential.username}</p>
                             </div>
                             <Button
                               variant="ghost"
                               size="icon"
+                              className="h-8 w-8 flex-shrink-0"
                               onClick={() => copyToClipboard(credential.username, "Username")}
                             >
                               <Copy className="h-4 w-4" />
                             </Button>
                           </div>
 
-                          <div className="flex items-center justify-between p-3 bg-background rounded-lg">
+                          <div className="flex items-center justify-between p-2 sm:p-3 bg-background rounded-lg gap-2">
                             <div className="space-y-1 flex-1 min-w-0">
                               <Label className="text-xs text-muted-foreground">Password</Label>
-                              <p className="font-mono text-sm truncate">
+                              <p className="font-mono text-xs sm:text-sm truncate">
                                 {visiblePasswords.has(credential.id) ? credential.password : "••••••••••••"}
                               </p>
                             </div>
-                            <div className="flex gap-1">
+                            <div className="flex gap-0.5 sm:gap-1 flex-shrink-0">
                               <Button
                                 variant="ghost"
                                 size="icon"
+                                className="h-8 w-8"
                                 onClick={() => togglePasswordVisibility(credential.id)}
                               >
                                 {visiblePasswords.has(credential.id) ? (
@@ -486,6 +488,7 @@ export default function Settings() {
                               <Button
                                 variant="ghost"
                                 size="icon"
+                                className="h-8 w-8"
                                 onClick={() => copyToClipboard(credential.password, "Password")}
                               >
                                 <Copy className="h-4 w-4" />
