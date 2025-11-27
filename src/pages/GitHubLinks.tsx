@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Github, MoreVertical, Plus, Pencil, Trash2, ExternalLink } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "@/hooks/use-toast";
+import toast from "react-hot-toast";
 import {
   Dialog,
   DialogContent,
@@ -57,11 +57,7 @@ const GitHubLinks = () => {
       .order("created_at", { ascending: false });
 
     if (error) {
-      toast({
-        title: "Error",
-        description: "Failed to load GitHub links",
-        variant: "destructive",
-      });
+      toast.error("Failed to load GitHub links");
       return;
     }
 
@@ -96,11 +92,7 @@ const GitHubLinks = () => {
     e.preventDefault();
 
     if (!formData.name.trim() || !formData.url.trim()) {
-      toast({
-        title: "Error",
-        description: "Please fill in name and URL",
-        variant: "destructive",
-      });
+      toast.error("Please fill in name and URL");
       return;
     }
 
@@ -118,18 +110,11 @@ const GitHubLinks = () => {
         .eq("id", editingLink.id);
 
       if (error) {
-        toast({
-          title: "Error",
-          description: "Failed to update link",
-          variant: "destructive",
-        });
+        toast.error("Failed to update link");
         return;
       }
 
-      toast({
-        title: "Success",
-        description: "Link updated successfully",
-      });
+      toast.success("Link updated successfully");
     } else {
       const { error } = await supabase.from("github_links").insert({
         name: formData.name,
@@ -139,18 +124,11 @@ const GitHubLinks = () => {
       });
 
       if (error) {
-        toast({
-          title: "Error",
-          description: "Failed to create link",
-          variant: "destructive",
-        });
+        toast.error("Failed to create link");
         return;
       }
 
-      toast({
-        title: "Success",
-        description: "Link created successfully",
-      });
+      toast.success("Link created successfully");
     }
 
     setIsDialogOpen(false);
@@ -177,40 +155,31 @@ const GitHubLinks = () => {
       .eq("id", linkToDelete.id);
 
     if (error) {
-      toast({
-        title: "Error",
-        description: "Failed to delete link",
-        variant: "destructive",
-      });
+      toast.error("Failed to delete link");
       return;
     }
 
-    toast({
-      title: "Success",
-      description: "Link deleted successfully",
-    });
+    toast.success("Link deleted successfully");
 
     setDeleteDialogOpen(false);
     setLinkToDelete(null);
   };
 
   return (
-    <>
-      <div className="flex items-start sm:items-center justify-between gap-4 mb-6 flex-col sm:flex-row">
-        <div className="min-w-0">
-          <h1 className="text-xl sm:text-2xl font-bold">GitHub Links</h1>
-          <p className="text-xs sm:text-sm text-muted-foreground">
-            Connect and manage your GitHub repositories
-          </p>
-        </div>
-      </div>
+    <div className="w-full">
       <Tabs defaultValue="repositories" className="w-full">
-        <div className="flex items-center justify-between mb-6">
-          <TabsList>
-            <TabsTrigger value="repositories">Repositories</TabsTrigger>
-            <TabsTrigger value="activity">Activity</TabsTrigger>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 sm:mb-6">
+          <TabsList className="w-full sm:w-auto">
+            <TabsTrigger value="repositories" className="flex-1 sm:flex-none text-xs sm:text-sm">
+              Repositories
+            </TabsTrigger>
+            <TabsTrigger value="activity" className="flex-1 sm:flex-none text-xs sm:text-sm">
+              Activity
+            </TabsTrigger>
           </TabsList>
           <Button
+            size="sm"
+            className="w-full sm:w-auto"
             onClick={() => {
               setEditingLink(null);
               setFormData({ name: "", url: "", description: "" });
@@ -222,13 +191,13 @@ const GitHubLinks = () => {
           </Button>
         </div>
 
-        <TabsContent value="repositories" className="space-y-4">
+        <TabsContent value="repositories" className="space-y-3 sm:space-y-4">
           {loading ? (
-            <p className="text-muted-foreground">Loading links...</p>
+            <p className="text-muted-foreground text-sm">Loading links...</p>
           ) : links.length === 0 ? (
             <Card>
               <CardContent className="pt-6">
-                <p className="text-center text-muted-foreground">
+                <p className="text-center text-muted-foreground text-sm">
                   No GitHub links yet. Click "Add Link" to create one.
                 </p>
               </CardContent>
@@ -236,36 +205,36 @@ const GitHubLinks = () => {
           ) : (
             links.map((link) => (
               <Card key={link.id} className="hover:shadow-lg transition-all hover:border-primary/50">
-                <CardHeader>
-                  <div className="flex items-start gap-3 sm:gap-4">
-                    <div className="h-12 w-12 sm:h-14 sm:w-14 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                      <Github className="h-6 w-6 sm:h-7 sm:w-7 text-primary" />
+                <CardHeader className="p-3 sm:p-6">
+                  <div className="flex items-start gap-2 sm:gap-4">
+                    <div className="h-10 w-10 sm:h-14 sm:w-14 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                      <Github className="h-5 w-5 sm:h-7 sm:w-7 text-primary" />
                     </div>
-                    <div className="flex-1 min-w-0 space-y-2">
-                      <CardTitle className="font-bold text-base sm:text-lg">{link.name}</CardTitle>
+                    <div className="flex-1 min-w-0 space-y-1 sm:space-y-2">
+                      <CardTitle className="font-bold text-sm sm:text-lg truncate">{link.name}</CardTitle>
                       <div>
-                        <p className="text-xs text-muted-foreground mb-0.5">GitHub Link</p>
+                        <p className="text-[10px] sm:text-xs text-muted-foreground mb-0.5">GitHub Link</p>
                         <a
                           href={link.url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-sm font-medium text-primary hover:underline truncate flex items-center gap-1"
+                          className="text-xs sm:text-sm font-medium text-primary hover:underline flex items-center gap-1 truncate max-w-[150px] sm:max-w-none"
                         >
-                          {link.url}
-                          <ExternalLink className="h-3 w-3" />
+                          <span className="truncate">{link.url}</span>
+                          <ExternalLink className="h-3 w-3 flex-shrink-0" />
                         </a>
                       </div>
                       {link.description && (
-                        <p className="text-sm text-muted-foreground">{link.description}</p>
+                        <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2">{link.description}</p>
                       )}
                     </div>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="flex-shrink-0">
+                        <Button variant="ghost" size="icon" className="flex-shrink-0 h-8 w-8 sm:h-10 sm:w-10">
                           <MoreVertical className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
+                      <DropdownMenuContent align="end" className="bg-popover border z-50">
                         <DropdownMenuItem onClick={() => handleEdit(link)}>
                           <Pencil className="h-4 w-4 mr-2" />
                           Edit
@@ -291,60 +260,63 @@ const GitHubLinks = () => {
 
         <TabsContent value="activity">
           <Card>
-            <CardHeader>
-              <CardTitle>Recent Activity</CardTitle>
-              <CardDescription>View recent commits and repository activity.</CardDescription>
+            <CardHeader className="p-4 sm:p-6">
+              <CardTitle className="text-base sm:text-lg">Recent Activity</CardTitle>
+              <CardDescription className="text-xs sm:text-sm">View recent commits and repository activity.</CardDescription>
             </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">Activity feed coming soon...</p>
+            <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">
+              <p className="text-muted-foreground text-sm">Activity feed coming soon...</p>
             </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-[95vw] sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>
+            <DialogTitle className="text-base sm:text-lg">
               {editingLink ? "Edit GitHub Link" : "Add GitHub Link"}
             </DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit}>
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Repository Name</Label>
+            <div className="space-y-3 sm:space-y-4 py-3 sm:py-4">
+              <div className="space-y-1.5 sm:space-y-2">
+                <Label htmlFor="name" className="text-sm">Repository Name</Label>
                 <Input
                   id="name"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   placeholder="e.g., frontend-app"
+                  className="text-sm"
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="url">GitHub URL</Label>
+              <div className="space-y-1.5 sm:space-y-2">
+                <Label htmlFor="url" className="text-sm">GitHub URL</Label>
                 <Input
                   id="url"
                   type="url"
                   value={formData.url}
                   onChange={(e) => setFormData({ ...formData, url: e.target.value })}
                   placeholder="https://github.com/username/repo"
+                  className="text-sm"
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="description">Description (Optional)</Label>
+              <div className="space-y-1.5 sm:space-y-2">
+                <Label htmlFor="description" className="text-sm">Description (Optional)</Label>
                 <Textarea
                   id="description"
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   placeholder="Brief description of the repository"
+                  className="text-sm min-h-[80px]"
                 />
               </div>
             </div>
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+            <DialogFooter className="gap-2 sm:gap-0">
+              <Button type="button" variant="outline" size="sm" onClick={() => setIsDialogOpen(false)}>
                 Cancel
               </Button>
-              <Button type="submit">
+              <Button type="submit" size="sm">
                 {editingLink ? "Update" : "Add"}
               </Button>
             </DialogFooter>
@@ -353,25 +325,25 @@ const GitHubLinks = () => {
       </Dialog>
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
+        <AlertDialogContent className="max-w-[95vw] sm:max-w-md">
           <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-            <AlertDialogDescription>
+            <AlertDialogTitle className="text-base sm:text-lg">Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription className="text-sm">
               This will permanently delete "{linkToDelete?.name}". This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogFooter className="gap-2 sm:gap-0">
+            <AlertDialogCancel className="text-sm">Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90 text-sm"
             >
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </>
+    </div>
   );
 };
 

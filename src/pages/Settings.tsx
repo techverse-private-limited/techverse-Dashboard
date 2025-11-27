@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
-import { useToast } from "@/hooks/use-toast";
+import toast from "react-hot-toast";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Eye, EyeOff, Copy, Edit, Trash2, Plus, Search } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -56,7 +56,6 @@ export default function Settings() {
     password: "",
     description: ""
   });
-  const { toast } = useToast();
   const navigate = useNavigate();
 
   const fetchData = async () => {
@@ -66,19 +65,11 @@ export default function Settings() {
     ]);
 
     if (projectsResult.error) {
-      toast({
-        title: "Error",
-        description: "Failed to load projects",
-        variant: "destructive",
-      });
+      toast.error("Failed to load projects");
     }
 
     if (credentialsResult.error) {
-      toast({
-        title: "Error",
-        description: "Failed to load credentials",
-        variant: "destructive",
-      });
+      toast.error("Failed to load credentials");
     }
 
     setProjects(projectsResult.data || []);
@@ -134,21 +125,14 @@ export default function Settings() {
 
   const copyToClipboard = (text: string, label: string) => {
     navigator.clipboard.writeText(text);
-    toast({
-      title: "Copied!",
-      description: `${label} copied to clipboard`,
-    });
+    toast.success(`${label} copied to clipboard`);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!selectedProjectId || !formData.username.trim() || !formData.password.trim()) {
-      toast({
-        title: "Error",
-        description: "Please fill in all required fields",
-        variant: "destructive",
-      });
+      toast.error("Please fill in all required fields");
       return;
     }
 
@@ -164,18 +148,11 @@ export default function Settings() {
         .eq("id", editingCredential.id);
 
       if (error) {
-        toast({
-          title: "Error",
-          description: "Failed to update credential",
-          variant: "destructive",
-        });
+        toast.error("Failed to update credential");
         return;
       }
 
-      toast({
-        title: "Updated!",
-        description: "Credential updated successfully",
-      });
+      toast.success("Credential updated successfully");
     } else {
       const { error } = await supabase
         .from("project_credentials")
@@ -187,18 +164,11 @@ export default function Settings() {
         });
 
       if (error) {
-        toast({
-          title: "Error",
-          description: "Failed to create credential",
-          variant: "destructive",
-        });
+        toast.error("Failed to create credential");
         return;
       }
 
-      toast({
-        title: "Added!",
-        description: "Credential added successfully",
-      });
+      toast.success("Credential added successfully");
     }
     
     setIsCredentialDialogOpen(false);
@@ -223,19 +193,11 @@ export default function Settings() {
       .eq("id", credentialId);
 
     if (error) {
-      toast({
-        title: "Error",
-        description: "Failed to delete credential",
-        variant: "destructive",
-      });
+      toast.error("Failed to delete credential");
       return;
     }
 
-    toast({
-      title: "Deleted",
-      description: "Credential removed successfully",
-      variant: "destructive",
-    });
+    toast.success("Credential removed successfully");
   };
 
   const resetForm = () => {

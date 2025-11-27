@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { useToast } from "@/hooks/use-toast";
+import toast from "react-hot-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Shield } from "lucide-react";
 
@@ -13,7 +13,6 @@ export default function AdminLogin() {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  const { toast } = useToast();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,24 +31,13 @@ export default function AdminLogin() {
       if (users && users.length > 0) {
         const user = users[0];
         localStorage.setItem("admin", JSON.stringify(user));
-        toast({
-          title: "Login successful",
-          description: "Welcome to admin dashboard",
-        });
+        toast.success("Welcome to admin dashboard");
         navigate("/admin/dashboard");
       } else {
-        toast({
-          title: "Login failed",
-          description: "Invalid admin credentials",
-          variant: "destructive",
-        });
+        toast.error("Invalid admin credentials");
       }
     } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
+      toast.error(error.message);
     } finally {
       setIsLoading(false);
     }

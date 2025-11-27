@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { ArrowLeft, Users, Phone, Video, MoreVertical, Edit } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
+import toast from "react-hot-toast";
 import { EditGroupDialog } from "@/components/EditGroupDialog";
 
 const GroupChat = () => {
@@ -15,7 +15,6 @@ const GroupChat = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const group = location.state?.group;
-  const { toast } = useToast();
 
   const [messages, setMessages] = useState<MessageType[]>([]);
   const [loading, setLoading] = useState(true);

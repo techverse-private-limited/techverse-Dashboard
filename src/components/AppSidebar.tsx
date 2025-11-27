@@ -1,7 +1,7 @@
 import { Home, Users, FolderKanban, Database, Github, LogOut, KeyRound } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation, useNavigate } from "react-router-dom";
-import { useToast } from "@/hooks/use-toast";
+import toast from "react-hot-toast";
 import { useState, useEffect } from "react";
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "@/components/ui/sidebar";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -37,9 +37,6 @@ export function AppSidebar() {
   const location = useLocation();
   const currentPath = location.pathname;
   const collapsed = state === "collapsed";
-  const {
-    toast
-  } = useToast();
   const navigate = useNavigate();
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
   const [user, setUser] = useState<{
@@ -59,10 +56,7 @@ export function AppSidebar() {
   const isActive = (path: string) => currentPath === path;
   const handleLogout = () => {
     localStorage.removeItem("user");
-    toast({
-      title: "Logged out",
-      description: "You have been successfully logged out."
-    });
+    toast.success("You have been successfully logged out");
     navigate("/login");
   };
   return <>
