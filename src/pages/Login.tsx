@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
+import toast from "react-hot-toast";
 import { LogIn } from "lucide-react";
 
 const Login = () => {
@@ -13,7 +13,6 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  const { toast } = useToast();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,29 +27,18 @@ const Login = () => {
         .single();
 
       if (error || !data) {
-        toast({
-          title: "Login Failed",
-          description: "Invalid username or password",
-          variant: "destructive",
-        });
+        toast.error("Invalid username or password");
         return;
       }
 
       // Store user data in localStorage
       localStorage.setItem("user", JSON.stringify(data));
       
-      toast({
-        title: "Welcome back!",
-        description: `Logged in as ${data.name}`,
-      });
+      toast.success(`Welcome back, ${data.name}!`);
 
       navigate("/");
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "An error occurred during login",
-        variant: "destructive",
-      });
+      toast.error("An error occurred during login");
     } finally {
       setIsLoading(false);
     }

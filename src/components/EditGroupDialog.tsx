@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
+import toast from "react-hot-toast";
 
 interface EditGroupDialogProps {
   open: boolean;
@@ -23,17 +23,12 @@ export const EditGroupDialog = ({
 }: EditGroupDialogProps) => {
   const [groupName, setGroupName] = useState(currentName);
   const [loading, setLoading] = useState(false);
-  const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!groupName.trim()) {
-      toast({
-        title: "Error",
-        description: "Please enter a group name",
-        variant: "destructive"
-      });
+      toast.error("Please enter a group name");
       return;
     }
 
@@ -46,20 +41,13 @@ export const EditGroupDialog = ({
 
       if (error) throw error;
 
-      toast({
-        title: "Success",
-        description: "Group name updated successfully"
-      });
+      toast.success("Group name updated successfully");
 
       onGroupUpdated();
       onOpenChange(false);
     } catch (error: any) {
       console.error('Error updating group:', error);
-      toast({
-        title: "Error",
-        description: error.message || "Failed to update group",
-        variant: "destructive"
-      });
+      toast.error(error.message || "Failed to update group");
     } finally {
       setLoading(false);
     }

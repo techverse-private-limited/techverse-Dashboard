@@ -4,7 +4,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
+import toast from "react-hot-toast";
 import { Button } from "@/components/ui/button";
 import { CreateGroupDialog } from "@/components/CreateGroupDialog";
 
@@ -21,7 +21,6 @@ interface Group {
 
 const Groups = () => {
   const navigate = useNavigate();
-  const { toast } = useToast();
   const [groups, setGroups] = useState<Group[]>([]);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
 
@@ -128,11 +127,7 @@ const Groups = () => {
       setGroups(groupsWithDetails);
     } catch (error: any) {
       console.error('Error fetching groups:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load groups",
-        variant: "destructive"
-      });
+      toast.error("Failed to load groups");
       setGroups([]);
     }
   };

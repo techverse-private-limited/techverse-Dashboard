@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
+import toast from "react-hot-toast";
 
 interface CreateGroupDialogProps {
   open: boolean;
@@ -27,17 +27,12 @@ export function CreateGroupDialog({ open, onOpenChange, onGroupCreated }: Create
   const [groupName, setGroupName] = useState("");
   const [selectedColor, setSelectedColor] = useState(colorOptions[0].value);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!groupName.trim()) {
-      toast({
-        title: "Error",
-        description: "Please enter a group name",
-        variant: "destructive"
-      });
+      toast.error("Please enter a group name");
       return;
     }
 
@@ -47,11 +42,7 @@ export function CreateGroupDialog({ open, onOpenChange, onGroupCreated }: Create
       // Get user from localStorage (custom auth)
       const userStr = localStorage.getItem("user");
       if (!userStr) {
-        toast({
-          title: "Error",
-          description: "You must be logged in to create a group",
-          variant: "destructive"
-        });
+        toast.error("You must be logged in to create a group");
         return;
       }
       
@@ -80,10 +71,7 @@ export function CreateGroupDialog({ open, onOpenChange, onGroupCreated }: Create
 
       if (memberError) throw memberError;
 
-      toast({
-        title: "Success",
-        description: `Group "${groupName}" created successfully!`
-      });
+      toast.success(`Group "${groupName}" created successfully!`);
 
       // Reset form
       setGroupName("");
@@ -96,11 +84,7 @@ export function CreateGroupDialog({ open, onOpenChange, onGroupCreated }: Create
       }
     } catch (error: any) {
       console.error('Error creating group:', error);
-      toast({
-        title: "Error",
-        description: "Failed to create group. Please try again.",
-        variant: "destructive"
-      });
+      toast.error("Failed to create group. Please try again.");
     } finally {
       setIsSubmitting(false);
     }

@@ -1,8 +1,7 @@
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { Toaster } from "react-hot-toast";
 import { Layout } from "./components/Layout";
 import Dashboard from "./pages/Dashboard";
 import Groups from "./pages/Groups";
@@ -49,8 +48,29 @@ const MainLayout = ({
 };
 const App = () => <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <Toaster />
-      <Sonner />
+      <Toaster 
+        position="top-right"
+        toastOptions={{
+          duration: 3000,
+          style: {
+            background: 'hsl(var(--background))',
+            color: 'hsl(var(--foreground))',
+            border: '1px solid hsl(var(--border))',
+          },
+          success: {
+            iconTheme: {
+              primary: 'hsl(var(--primary))',
+              secondary: 'hsl(var(--primary-foreground))',
+            },
+          },
+          error: {
+            iconTheme: {
+              primary: 'hsl(var(--destructive))',
+              secondary: 'hsl(var(--destructive-foreground))',
+            },
+          },
+        }}
+      />
       <BrowserRouter>
         <Routes>
           <Route path="/login" element={<Login />} />
@@ -65,10 +85,6 @@ const App = () => <QueryClientProvider client={queryClient}>
           
           {/* Protected routes with persistent sidebar */}
           <Route path="/" element={<MainLayout>
-              <div className="space-y-2 mb-6">
-                <h1 className="text-xl sm:text-2xl font-bold">Dashboard</h1>
-                <p className="text-xs sm:text-sm text-muted-foreground">Welcome back! Here's your overview.</p>
-              </div>
               <Dashboard />
             </MainLayout>} />
           
