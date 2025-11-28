@@ -10,6 +10,7 @@ import Projects from "./pages/Projects";
 import SupabaseAccounts from "./pages/SupabaseAccounts";
 import GitHubLinks from "./pages/GitHubLinks";
 import Settings from "./pages/Settings";
+import Profile from "./pages/Profile";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
@@ -86,6 +87,10 @@ const App = () => <QueryClientProvider client={queryClient}>
           {/* Protected routes with persistent sidebar */}
           <Route path="/" element={<MainLayout>
               <Dashboard />
+            </MainLayout>} />
+          
+          <Route path="/profile" element={<MainLayout>
+              <Profile />
             </MainLayout>} />
           
           <Route path="/groups" element={<MainLayout>

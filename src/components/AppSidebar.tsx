@@ -1,4 +1,4 @@
-import { Home, Users, FolderKanban, Database, Github, LogOut, KeyRound } from "lucide-react";
+import { Home, Users, FolderKanban, Database, Github, LogOut, KeyRound, UserCircle } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
@@ -9,6 +9,10 @@ const items = [{
   title: "Dashboard",
   url: "/",
   icon: Home
+}, {
+  title: "Profile",
+  url: "/profile",
+  icon: UserCircle
 }, {
   title: "Groups",
   url: "/groups",
