@@ -180,17 +180,21 @@ const GroupChat = () => {
 
           const readBy = reads?.map(r => r.user_id) || [];
 
-          // Get sender username from users table
+          // Get sender username and profile photo from users table
           let senderName = "Member";
+          let senderPhoto = "";
           if (msg.sender_id !== user?.id) {
             const { data: userData } = await supabase
               .from('users')
-              .select('username')
+              .select('username, profile_photo')
               .eq('id', msg.sender_id)
               .maybeSingle();
             
             if (userData?.username) {
               senderName = userData.username;
+            }
+            if (userData?.profile_photo) {
+              senderPhoto = userData.profile_photo;
             }
           }
 
@@ -198,6 +202,7 @@ const GroupChat = () => {
             id: msg.id,
             text: msg.text || '',
             sender: msg.sender_id === user?.id ? "You" : senderName,
+            senderPhoto: senderPhoto,
             timestamp: new Date(msg.created_at),
             isSent: msg.sender_id === user?.id,
             image: msg.image,
@@ -272,17 +277,21 @@ const GroupChat = () => {
             return;
           }
 
-          // Get sender username from users table
+          // Get sender username and profile photo from users table
           let senderName = "Member";
+          let senderPhoto = "";
           if (newMsg.sender_id !== user?.id) {
             const { data: userData } = await supabase
               .from('users')
-              .select('username')
+              .select('username, profile_photo')
               .eq('id', newMsg.sender_id)
               .maybeSingle();
             
             if (userData?.username) {
               senderName = userData.username;
+            }
+            if (userData?.profile_photo) {
+              senderPhoto = userData.profile_photo;
             }
           }
 
@@ -290,6 +299,7 @@ const GroupChat = () => {
             id: newMsg.id,
             text: newMsg.text || '',
             sender: senderName,
+            senderPhoto: senderPhoto,
             timestamp: new Date(newMsg.created_at),
             isSent: false,
             image: newMsg.image,
