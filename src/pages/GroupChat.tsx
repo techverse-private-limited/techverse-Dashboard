@@ -9,6 +9,7 @@ import { ArrowLeft, Users, Phone, Video, MoreVertical, Edit } from "lucide-react
 import { supabase } from "@/integrations/supabase/client";
 import toast from "react-hot-toast";
 import { EditGroupDialog } from "@/components/EditGroupDialog";
+import { OnlineUsersIndicator } from "@/components/OnlineUsersIndicator";
 
 const GroupChat = () => {
   const { groupName } = useParams();
@@ -419,7 +420,11 @@ const GroupChat = () => {
               <Edit className="h-3 w-3" />
             </Button>
           </div>
-          <p className="text-xs opacity-90">{group?.members || 0} members</p>
+          {group?.id && !group.id.startsWith('static-') ? (
+            <OnlineUsersIndicator groupId={group.id} />
+          ) : (
+            <p className="text-xs opacity-90">{group?.members || 0} members</p>
+          )}
         </div>
 
         <div className="flex items-center gap-0.5 sm:gap-1">
