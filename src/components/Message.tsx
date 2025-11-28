@@ -24,6 +24,7 @@ export interface MessageType {
   id: string;
   text: string;
   sender: string;
+  senderPhoto?: string;
   timestamp: Date;
   isSent: boolean;
   image?: string;
@@ -172,8 +173,8 @@ export const Message = ({ message, onEdit, onDelete }: MessageProps) => {
 
       {!message.isSent && (
         <Avatar className="h-8 w-8 sm:h-10 sm:w-10 flex-shrink-0">
-          <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${message.sender}`} />
-          <AvatarFallback>{message.sender[0]}</AvatarFallback>
+          <AvatarImage src={message.senderPhoto || `https://api.dicebear.com/7.x/avataaars/svg?seed=${message.sender}`} />
+          <AvatarFallback>{message.sender[0]?.toUpperCase()}</AvatarFallback>
         </Avatar>
       )}
       
