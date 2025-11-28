@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Pencil, Trash2, X, Check, Download } from "lucide-react";
+import { Pencil, Trash2, X, Check, Download, Eye } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
   AlertDialog,
@@ -18,6 +18,7 @@ import {
   Dialog,
   DialogContent,
 } from "@/components/ui/dialog";
+import { MessageSeenByDialog } from "./MessageSeenByDialog";
 
 export interface MessageType {
   id: string;
@@ -41,6 +42,7 @@ export const Message = ({ message, onEdit, onDelete }: MessageProps) => {
   const [showActions, setShowActions] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showImageDialog, setShowImageDialog] = useState(false);
+  const [showSeenByDialog, setShowSeenByDialog] = useState(false);
   const messageRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -160,6 +162,14 @@ export const Message = ({ message, onEdit, onDelete }: MessageProps) => {
         </DialogContent>
       </Dialog>
 
+      {/* Seen By Dialog */}
+      <MessageSeenByDialog
+        open={showSeenByDialog}
+        onOpenChange={setShowSeenByDialog}
+        messageId={message.id}
+        readByIds={message.readBy || []}
+      />
+
       {!message.isSent && (
         <Avatar className="h-8 w-8 sm:h-10 sm:w-10 flex-shrink-0">
           <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${message.sender}`} />
@@ -258,9 +268,13 @@ export const Message = ({ message, onEdit, onDelete }: MessageProps) => {
             {formattedTime}
           </span>
           {message.isSent && message.readBy && message.readBy.length > 0 && (
-            <span className="text-xs text-primary">
-              ✓✓ {message.readBy.length}
-            </span>
+            <button
+              onClick={() => setShowSeenByDialog(true)}
+              className="flex items-center gap-1 text-xs text-primary hover:text-primary/80 transition-colors cursor-pointer"
+            >
+              <Eye className="h-3 w-3" />
+              <span>Seen by {message.readBy.length}</span>
+            </button>
           )}
         </div>
       </div>
