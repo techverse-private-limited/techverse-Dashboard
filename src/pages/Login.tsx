@@ -53,6 +53,10 @@ const Login = () => {
               <LogIn className="h-6 w-6 text-primary" />
             </div>
           </div>
+          <div className="space-y-1 mb-2">
+            <h1 className="text-xl font-bold text-primary">Techverse Infotech Pvt Ltd</h1>
+            <p className="text-lg font-semibold text-foreground">Dashboard</p>
+          </div>
           <CardTitle className="text-2xl font-bold">Welcome Back</CardTitle>
           <CardDescription>Enter your credentials to access the dashboard</CardDescription>
         </CardHeader>
