@@ -92,17 +92,16 @@ const Profile = () => {
     try {
       const fileExt = file.name.split('.').pop();
       const fileName = `${user.id}-${Date.now()}.${fileExt}`;
-      const filePath = `profile-photos/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
-        .from('chat-images')
-        .upload(filePath, file);
+        .from('profile-photos')
+        .upload(fileName, file, { upsert: true });
 
       if (uploadError) throw uploadError;
 
       const { data: urlData } = supabase.storage
-        .from('chat-images')
-        .getPublicUrl(filePath);
+        .from('profile-photos')
+        .getPublicUrl(fileName);
 
       setFormData(prev => ({ ...prev, profile_photo: urlData.publicUrl }));
       toast.success("Photo uploaded successfully");
