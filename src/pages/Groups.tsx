@@ -52,6 +52,17 @@ const Groups = () => {
           fetchGroups();
         }
       )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'message_reads'
+        },
+        () => {
+          fetchGroups();
+        }
+      )
       .subscribe();
 
     return () => {
