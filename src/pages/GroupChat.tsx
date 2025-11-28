@@ -15,28 +15,39 @@ const GroupChat = () => {
   const { groupName } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
-  const group = location.state?.group;
+  const stateGroup = location.state?.group;
 
   const [messages, setMessages] = useState<MessageType[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [isEditGroupOpen, setIsEditGroupOpen] = useState(false);
-  const [groupData, setGroupData] = useState(group);
+  const [groupData, setGroupData] = useState<any>(stateGroup);
 
   useEffect(() => {
     initializeChat();
-  }, [group?.id]);
+  }, [groupName]);
 
-  useEffect(() => {
-    setGroupData(group);
-  }, [group]);
+  const fetchGroupByName = async (name: string) => {
+    const decodedName = decodeURIComponent(name);
+    const { data, error } = await supabase
+      .from('groups')
+      .select('*')
+      .eq('name', decodedName)
+      .maybeSingle();
+    
+    if (error) {
+      console.error('Error fetching group:', error);
+      return null;
+    }
+    return data;
+  };
 
   const handleGroupUpdated = async () => {
-    if (!group?.id) return;
+    if (!groupData?.id) return;
     const { data } = await supabase
       .from('groups')
       .select('*')
-      .eq('id', group.id)
+      .eq('id', groupData.id)
       .maybeSingle();
     if (data) {
       setGroupData(data);
@@ -106,9 +117,18 @@ const GroupChat = () => {
       const user = JSON.parse(userStr);
       setCurrentUserId(user.id);
 
-      if (group?.id && !group.id.startsWith('static-')) {
-        await fetchMessages();
-        subscribeToMessages();
+      // If we don't have group data from state, fetch it from DB
+      let currentGroup = groupData;
+      if (!currentGroup && groupName) {
+        currentGroup = await fetchGroupByName(groupName);
+        if (currentGroup) {
+          setGroupData(currentGroup);
+        }
+      }
+
+      if (currentGroup?.id && !currentGroup.id.startsWith('static-')) {
+        await fetchMessages(currentGroup.id);
+        subscribeToMessages(currentGroup.id);
       } else {
         setMessages([
           {
@@ -134,14 +154,14 @@ const GroupChat = () => {
     }
   };
 
-  const fetchMessages = async () => {
+  const fetchMessages = async (groupId: string) => {
     try {
-      if (!group?.id) return;
+      if (!groupId) return;
 
       const { data, error } = await supabase
         .from('messages')
         .select('*')
-        .eq('group_id', group.id)
+        .eq('group_id', groupId)
         .order('created_at', { ascending: true });
 
       if (error) throw error;
@@ -210,18 +230,18 @@ const GroupChat = () => {
     }
   };
 
-  const subscribeToMessages = () => {
-    if (!group?.id) return;
+  const subscribeToMessages = (groupId: string) => {
+    if (!groupId) return;
 
     const channel = supabase
-      .channel(`messages-${group.id}`)
+      .channel(`messages-${groupId}`)
       .on(
         'postgres_changes',
         {
           event: 'INSERT',
           schema: 'public',
           table: 'messages',
-          filter: `group_id=eq.${group.id}`
+          filter: `group_id=eq.${groupId}`
         },
         async (payload) => {
           const newMsg = payload.new;
@@ -328,12 +348,12 @@ const GroupChat = () => {
       
       const user = JSON.parse(userStr);
       
-      if (!group?.id) {
+      if (!groupData?.id) {
         toast.error("Invalid group");
         return;
       }
 
-      if (group.id.startsWith('static-')) {
+      if (groupData.id.startsWith('static-')) {
         const newMessage: MessageType = {
           id: Date.now().toString(),
           text,
@@ -362,7 +382,7 @@ const GroupChat = () => {
       const { error } = await supabase
         .from('messages')
         .insert({
-          group_id: group.id,
+          group_id: groupData.id,
           sender_id: user.id,
           text,
           image
@@ -384,7 +404,7 @@ const GroupChat = () => {
       <EditGroupDialog
         open={isEditGroupOpen}
         onOpenChange={setIsEditGroupOpen}
-        groupId={group?.id || ''}
+        groupId={groupData?.id || ''}
         currentName={groupData?.name || groupName || ''}
         onGroupUpdated={handleGroupUpdated}
       />
@@ -401,7 +421,7 @@ const GroupChat = () => {
         
         <Avatar 
           className="h-8 w-8 sm:h-10 sm:w-10 shrink-0" 
-          style={{ backgroundColor: groupData?.color || group?.color || "hsl(173, 80%, 40%)" }}
+          style={{ backgroundColor: groupData?.color || "hsl(173, 80%, 40%)" }}
         >
           <AvatarFallback className="bg-transparent text-white">
             <Users className="h-4 w-4 sm:h-5 sm:w-5" />
@@ -420,10 +440,10 @@ const GroupChat = () => {
               <Edit className="h-3 w-3" />
             </Button>
           </div>
-          {group?.id && !group.id.startsWith('static-') ? (
-            <OnlineUsersIndicator groupId={group.id} />
+          {groupData?.id && !groupData.id.startsWith('static-') ? (
+            <OnlineUsersIndicator groupId={groupData.id} />
           ) : (
-            <p className="text-xs opacity-90">{group?.members || 0} members</p>
+            <p className="text-xs opacity-90">{groupData?.members || 0} members</p>
           )}
         </div>
 
@@ -457,7 +477,7 @@ const GroupChat = () => {
         onEditMessage={handleEditMessage}
         onDeleteMessage={handleDeleteMessage}
       />
-      <MessageInput onSendMessage={handleSendMessage} groupId={group?.id} />
+      <MessageInput onSendMessage={handleSendMessage} groupId={groupData?.id} />
     </div>
   );
 };
