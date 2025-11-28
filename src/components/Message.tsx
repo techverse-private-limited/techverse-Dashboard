@@ -219,7 +219,7 @@ export const Message = ({ message, onEdit, onDelete }: MessageProps) => {
                 <Input
                   value={editText}
                   onChange={(e) => setEditText(e.target.value)}
-                  className="flex-1 h-8 text-sm"
+                  className="flex-1 h-8 text-sm bg-background text-foreground border-background/50"
                   autoFocus
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') handleSaveEdit();
