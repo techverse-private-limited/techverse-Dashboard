@@ -44,7 +44,17 @@ export const Message = ({ message, onEdit, onDelete }: MessageProps) => {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showImageDialog, setShowImageDialog] = useState(false);
   const [showSeenByDialog, setShowSeenByDialog] = useState(false);
+  const [currentUserPhoto, setCurrentUserPhoto] = useState<string | null>(null);
   const messageRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    // Get current user's profile photo for sent messages
+    const userStr = localStorage.getItem("user");
+    if (userStr) {
+      const user = JSON.parse(userStr);
+      setCurrentUserPhoto(user.profile_photo || null);
+    }
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -171,6 +181,7 @@ export const Message = ({ message, onEdit, onDelete }: MessageProps) => {
         readByIds={message.readBy || []}
       />
 
+      {/* Avatar for received messages (left side) */}
       {!message.isSent && (
         <Avatar className="h-8 w-8 sm:h-10 sm:w-10 flex-shrink-0 border-2 border-primary/20">
           <AvatarImage src={message.senderPhoto || `https://api.dicebear.com/7.x/avataaars/svg?seed=${message.sender}`} />
@@ -182,7 +193,7 @@ export const Message = ({ message, onEdit, onDelete }: MessageProps) => {
       
       <div
         className={cn(
-          "flex flex-col max-w-[80%] sm:max-w-[70%]",
+          "flex flex-col max-w-[70%] sm:max-w-[65%]",
           message.isSent ? "items-end" : "items-start"
         )}
       >
@@ -287,6 +298,16 @@ export const Message = ({ message, onEdit, onDelete }: MessageProps) => {
           )}
         </div>
       </div>
+
+      {/* Avatar for sent messages (right side, due to flex-row-reverse) */}
+      {message.isSent && (
+        <Avatar className="h-8 w-8 sm:h-10 sm:w-10 flex-shrink-0 border-2 border-primary/20">
+          <AvatarImage src={currentUserPhoto || `https://api.dicebear.com/7.x/avataaars/svg?seed=You`} />
+          <AvatarFallback className="bg-primary text-primary-foreground font-semibold">
+            Y
+          </AvatarFallback>
+        </Avatar>
+      )}
     </div>
   );
 };
