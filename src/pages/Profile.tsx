@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Camera, Save, User, Lock, Eye, EyeOff } from "lucide-react";
+import { Camera, Save, User, Lock, Eye, EyeOff, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import toast from "react-hot-toast";
 
@@ -103,11 +103,54 @@ const Profile = () => {
         .from('profile-photos')
         .getPublicUrl(fileName);
 
-      setFormData(prev => ({ ...prev, profile_photo: urlData.publicUrl }));
+      const photoUrl = urlData.publicUrl;
+
+      // Auto-save photo to database
+      const { error: updateError } = await supabase
+        .from('users')
+        .update({ profile_photo: photoUrl })
+        .eq('id', user.id);
+
+      if (updateError) throw updateError;
+
+      // Update local state and localStorage
+      setFormData(prev => ({ ...prev, profile_photo: photoUrl }));
+      const updatedUser = { ...user, profile_photo: photoUrl };
+      setUser(updatedUser);
+      localStorage.setItem("user", JSON.stringify(updatedUser));
+
       toast.success("Photo uploaded successfully");
     } catch (error: any) {
       console.error('Error uploading photo:', error);
       toast.error("Failed to upload photo");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleDeletePhoto = async () => {
+    if (!user || !formData.profile_photo) return;
+
+    setUploading(true);
+    try {
+      // Update database to remove photo
+      const { error: updateError } = await supabase
+        .from('users')
+        .update({ profile_photo: null })
+        .eq('id', user.id);
+
+      if (updateError) throw updateError;
+
+      // Update local state and localStorage
+      setFormData(prev => ({ ...prev, profile_photo: "" }));
+      const updatedUser = { ...user, profile_photo: null };
+      setUser(updatedUser);
+      localStorage.setItem("user", JSON.stringify(updatedUser));
+
+      toast.success("Photo removed successfully");
+    } catch (error: any) {
+      console.error('Error removing photo:', error);
+      toast.error("Failed to remove photo");
     } finally {
       setUploading(false);
     }
@@ -236,7 +279,21 @@ const Profile = () => {
             onChange={handlePhotoUpload}
             className="hidden"
           />
-          <p className="text-xs text-muted-foreground">Max file size: 2MB</p>
+          <div className="flex items-center gap-2">
+            <p className="text-xs text-muted-foreground">Max file size: 2MB</p>
+            {formData.profile_photo && (
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={handleDeletePhoto}
+                disabled={uploading}
+                className="h-7 text-xs"
+              >
+                <Trash2 className="h-3 w-3 mr-1" />
+                Remove
+              </Button>
+            )}
+          </div>
         </CardContent>
       </Card>
 
