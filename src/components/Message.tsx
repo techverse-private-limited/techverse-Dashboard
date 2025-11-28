@@ -267,14 +267,20 @@ export const Message = ({ message, onEdit, onDelete }: MessageProps) => {
           <span className="text-xs text-muted-foreground">
             {formattedTime}
           </span>
-          {message.isSent && message.readBy && message.readBy.length > 0 && (
-            <button
-              onClick={() => setShowSeenByDialog(true)}
-              className="flex items-center gap-1 text-xs text-primary hover:text-primary/80 transition-colors cursor-pointer"
-            >
-              <Eye className="h-3 w-3" />
-              <span>Seen by {message.readBy.length}</span>
-            </button>
+          {message.isSent && (
+            message.readBy && message.readBy.length > 0 ? (
+              <button
+                onClick={() => setShowSeenByDialog(true)}
+                className="flex items-center gap-1 text-xs text-primary hover:text-primary/80 transition-colors cursor-pointer"
+              >
+                <Eye className="h-3 w-3" />
+                <span>Seen by {message.readBy.length}</span>
+              </button>
+            ) : (
+              <span className="text-xs text-muted-foreground flex items-center gap-1">
+                ✓ Delivered
+              </span>
+            )
           )}
         </div>
       </div>
