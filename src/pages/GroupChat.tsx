@@ -72,6 +72,13 @@ const GroupChat = () => {
 
   const handleDeleteMessage = async (messageId: string) => {
     try {
+      // Don't try to delete temp messages from DB
+      if (messageId.startsWith('temp-')) {
+        setMessages(prev => prev.filter(m => m.id !== messageId));
+        toast.success("Message deleted");
+        return;
+      }
+
       const { error } = await supabase
         .from('messages')
         .delete()

@@ -172,9 +172,11 @@ export const Message = ({ message, onEdit, onDelete }: MessageProps) => {
       />
 
       {!message.isSent && (
-        <Avatar className="h-8 w-8 sm:h-10 sm:w-10 flex-shrink-0">
+        <Avatar className="h-8 w-8 sm:h-10 sm:w-10 flex-shrink-0 border-2 border-primary/20">
           <AvatarImage src={message.senderPhoto || `https://api.dicebear.com/7.x/avataaars/svg?seed=${message.sender}`} />
-          <AvatarFallback>{message.sender[0]?.toUpperCase()}</AvatarFallback>
+          <AvatarFallback className="bg-primary text-primary-foreground font-semibold">
+            {message.sender[0]?.toUpperCase()}
+          </AvatarFallback>
         </Avatar>
       )}
       
